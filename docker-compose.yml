@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/app/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mongodb://mongo:27017
+      - DATABASE_NAME=faceswap_saas_db
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - USDT_ETH_WALLET_ADDRESS=${USDT_ETH_WALLET_ADDRESS}
+      - ONE_TIME_PAYMENT_AMOUNT_USD=${ONE_TIME_PAYMENT_AMOUNT_USD}
+      - MONTHLY_SUBSCRIPTION_AMOUNT_USD=${MONTHLY_SUBSCRIPTION_AMOUNT_USD}
+      - MONTHLY_REQUEST_LIMIT=${MONTHLY_REQUEST_LIMIT}
+      - FREE_REQUEST_LIMIT=${FREE_REQUEST_LIMIT}
+      - DEBUG=${DEBUG:-True}
+    depends_on:
+      - mongo
+    env_file:
+      - .env
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
