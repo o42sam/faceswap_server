@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Union
 import uuid
 from beanie.exceptions import DocumentNotFound
+from datetime import datetime
 
 from app.models.user import User
 from app.schemas.user_schemas import UserCreate, UserCreateGoogle, UserUpdate

@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from pydantic import ValidationError
 
 from app.core.config import settings
-from app.utils.custom_exceptions import AuthError
+from app.utils.exceptions import AuthError
 from app.schemas.token_schemas import TokenPayload
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

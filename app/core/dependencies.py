@@ -5,9 +5,10 @@ from typing import Optional, Annotated
 from app.core.security import decode_token
 from app.schemas.token_schemas import TokenPayload
 from app.models.user import User
-from app.crud.crud_user import get_user_by_id
-from app.utils.custom_exceptions import AuthError, ForbiddenError, PaymentRequiredError
+from app.repositories.user import get_user_by_id
+from app.utils.exceptions import AuthError, ForbiddenError, PaymentRequiredError
 from app.core.config import settings
+from datetime import datetime
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login/email")
 

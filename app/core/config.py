@@ -20,14 +20,22 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_REDIRECT_URI: Optional[AnyHttpUrl] = None
 
-    STRIPE_SECRET_KEY: Optional[str] = None
-    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
+    STRIPE_SECRET_KEY: Optional[str] = None # Keep for now, though not used for new card payments
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None # Keep for now
+
+    PAYSTACK_SECRET_KEY: Optional[str] = None
+    PAYSTACK_PUBLIC_KEY: Optional[str] = None # For frontend if needed
+
     USDT_ETH_WALLET_ADDRESS: Optional[str] = None
     
     ONE_TIME_PAYMENT_AMOUNT_USD: int = 2999 # Price in cents
     MONTHLY_SUBSCRIPTION_AMOUNT_USD: int = 299 # Price in cents
     MONTHLY_REQUEST_LIMIT: int = 40
     FREE_REQUEST_LIMIT: int = 1
+
+    # Paystack API Base URL
+    PAYSTACK_API_URL: str = "https://api.paystack.co"
+
 
     model_config = SettingsConfigDict(env_file=".env", extra='ignore')
 

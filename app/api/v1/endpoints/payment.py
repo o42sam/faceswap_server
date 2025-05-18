@@ -1,63 +1,65 @@
 from fastapi import APIRouter, Depends, Request, BackgroundTasks, Query
 from typing import Annotated
+import uuid # Standard Python UUID
 
 from app.models.user import User
 from app.core.dependencies import get_current_active_user
-from app.services import payment_service
+from app.services import payment # payment will now have paystack functions
 from app.schemas.payment_schemas import (
-    CreateCheckoutSessionRequest, StripeCheckoutSessionResponse,
+    CreateCardPaymentRequest, PaystackInitializationResponse, # Changed Stripe to Paystack
     CreateUSDTTransactionRequest, USDTTransactionResponse, PaymentStatusResponse
 )
-from app.utils.custom_exceptions import AppLogicError
+from app.utils.exceptions import AppLogicError
 
 router = APIRouter()
 
-@router.post("/stripe/create-checkout-session", response_model=StripeCheckoutSessionResponse)
-async def create_stripe_checkout(
-    payload: CreateCheckoutSessionRequest,
+@router.post("/paystack/initialize-payment", response_model=PaystackInitializationResponse)
+async def initialize_paystack_checkout( # Renamed from create_stripe_checkout
+    payload: CreateCardPaymentRequest, # Reusing schema, name changed for clarity
     current_user: Annotated[User, Depends(get_current_active_user)],
-    request: Request # Needed for success/cancel URLs if dynamically generated
+    request: Request
 ):
-    # Frontend should provide these URLs, or construct them based on request.base_url
-    # For this example, let's assume they are passed or configured
-    base_url = str(request.base_url).rstrip('/')
-    success_url = f"{base_url}/payment-success" # Placeholder
-    cancel_url = f"{base_url}/payment-cancel"   # Placeholder
-    
-    return await payment_service.create_stripe_checkout_session(
+    # The callback URL for Paystack is set within the service layer.
+    # Frontend will provide a base for its own callback page.
+    # e.g. if frontend is at https://app.example.com, it might use
+    # https://app.example.com/payment as base_callback_url
+    # and Paystack will be configured to redirect to https://app.example.com/payment/paystack/callback
+
+    # For this example, we'll use request.base_url for the frontend base callback.
+    # In a real app, frontend might send its specific base callback URL.
+    base_frontend_callback_url = str(request.base_url).rstrip('/')
+
+    return await payment.initialize_paystack_payment(
         user=current_user,
         payment_type=payload.payment_type,
-        success_url=success_url,
-        cancel_url=cancel_url
+        base_callback_url=base_frontend_callback_url # This is the base URL for the frontend page that handles Paystack callback
     )
 
-@router.get("/stripe/verify-payment", response_model=PaymentStatusResponse)
-async def verify_stripe_payment_endpoint(
-    session_id: str = Query(..., description="Stripe Checkout Session ID"),
-    current_user: Annotated[User, Depends(get_current_active_user)]
+@router.get("/paystack/verify-payment", response_model=PaymentStatusResponse)
+async def verify_paystack_payment_endpoint( # Renamed from verify_stripe_payment_endpoint
+    current_user: Annotated[User, Depends(get_current_active_user)], # Moved before 'reference'
+    reference: str = Query(..., description="Paystack Transaction Reference") # Changed from session_id
 ):
-    return await payment_service.verify_stripe_payment(session_id=session_id, user=current_user)
+    return await payment.verify_paystack_payment(reference=reference, user=current_user)
 
 
+# USDT Endpoints remain unchanged
 @router.post("/usdt/initiate-payment", response_model=USDTTransactionResponse)
 async def initiate_usdt_payment_endpoint(
-    payload: CreateUSDTTransactionRequest, # Only payment_type needed here
+    payload: CreateUSDTTransactionRequest,
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    return await payment_service.initiate_usdt_payment(user=current_user, payment_type=payload.payment_type)
+    return await payment.initiate_usdt_payment(user=current_user, payment_type=payload.payment_type)
 
 @router.post("/usdt/confirm-payment", response_model=PaymentStatusResponse)
 async def confirm_usdt_payment_endpoint(
+    current_user: Annotated[User, Depends(get_current_active_user)], # Moved before parameters with defaults
+    background_tasks: BackgroundTasks, # Moved before parameters with defaults
     payment_attempt_id: uuid.UUID = Query(..., description="Internal payment attempt ID"),
-    transaction_hash: str = Query(..., description="USDT transaction hash from the blockchain"),
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    background_tasks: BackgroundTasks
+    transaction_hash: str = Query(..., description="USDT transaction hash from the blockchain")
 ):
-    # Basic validation of transaction_hash format could be added
-    if not transaction_hash.startswith("0x") or len(transaction_hash) != 66:
-        raise AppLogicError(detail="Invalid transaction hash format.", error_code="INVALID_TX_HASH")
-        
-    return await payment_service.confirm_usdt_payment(
+    # Validation of transaction_hash format is now in the service layer
+    return await payment.confirm_usdt_payment(
         user=current_user,
         payment_attempt_id=payment_attempt_id,
         transaction_hash=transaction_hash,
@@ -66,4 +68,4 @@ async def confirm_usdt_payment_endpoint(
 
 @router.get("/status", response_model=PaymentStatusResponse)
 async def get_payment_status_endpoint(current_user: Annotated[User, Depends(get_current_active_user)]):
-    return await payment_service.get_user_payment_status(user=current_user)
+    return await payment.get_user_payment_status(user=current_user)

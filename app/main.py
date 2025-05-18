@@ -6,8 +6,8 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.db.mongodb_utils import connect_to_mongo, close_mongo_connection
-from app.api.v1.api import api_router_v1
-from app.utils.custom_exceptions import AppExceptionBase, APIError
+from app.api.v1.router import api_router_v1
+from app.utils.exceptions import AppExceptionBase, APIError
 
 
 @asynccontextmanager

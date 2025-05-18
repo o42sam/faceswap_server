@@ -1,7 +1,7 @@
 from app.models.user import User
-from app.crud import crud_user
+from app.repositories import user as user_repo
 from app.core.config import settings
-from app.utils.custom_exceptions import AppLogicError, PaymentRequiredError
+from app.utils.exceptions import AppLogicError, PaymentRequiredError
 from datetime import datetime
 
 class FaceSwapProcessor:
@@ -72,7 +72,7 @@ class FaceSwapProcessor:
 
 
         # 3. Update user's request count
-        await crud_user.increment_user_request_count(user, is_free_request=is_processing_free_request)
+        await user_repo.increment_user_request_count(user, is_free_request=is_processing_free_request)
 
         return result_image_data
 

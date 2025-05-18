@@ -2,17 +2,19 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional
 import uuid
 
-class CreateCheckoutSessionRequest(BaseModel):
+class CreateCardPaymentRequest(BaseModel): # Renamed from CreateCheckoutSessionRequest for clarity
     payment_type: Literal["one_time", "monthly"]
 
-class StripeCheckoutSessionResponse(BaseModel):
-    session_id: str
-    publishable_key: str
-    url: Optional[str] = None # For Stripe Checkout redirect
+# Renamed from StripeCheckoutSessionResponse
+class PaystackInitializationResponse(BaseModel):
+    authorization_url: str
+    access_code: str
+    reference: str
+    publishable_key: Optional[str] = None # Paystack public key, send if frontend needs it (e.g. for Paystack JS)
 
 class CreateUSDTTransactionRequest(BaseModel):
     payment_type: Literal["one_time", "monthly"]
-    transaction_hash: str # User provides this after sending USDT
+    # Removed transaction_hash from here, as it's for confirmation step
 
 class USDTTransactionResponse(BaseModel):
     message: str

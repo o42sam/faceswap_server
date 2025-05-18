@@ -5,8 +5,8 @@ import io
 
 from app.models.user import User
 from app.core.dependencies import get_current_active_user, FaceSwapAccessChecker
-from app.services.faceswap_service import faceswap_processor
-from app.utils.custom_exceptions import InvalidInputError
+from app.services.faceswap import faceswap_processor
+from app.utils.exceptions import InvalidInputError
 
 router = APIRouter()
 

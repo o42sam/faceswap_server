@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.payment import PaymentAttempt, Subscription
 from app.schemas.payment_schemas import CreateUSDTTransactionRequest
 from app.core.config import settings
+from typing import Optional, Literal, Union
 
 async def create_payment_attempt(
     user: User,
